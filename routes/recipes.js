@@ -32,15 +32,20 @@ router.get("/recipes/:id", auth, async (req, res) => {
   });
 });
 
-router.post("/postRecipe", auth, async (req, res, next) => {
+router.post("/postRecipe", auth, async (req, res) => {
   try {
     const newRecipe = recipeSchema.parse(req.body);
-    const savedRecipe = await saveRecipe(newRecipe);
+    const userID = req.user.id; // ID do usuário logado
+    const savedRecipe = await saveRecipe(newRecipe); // Salvar a receita
     res.json({
       recipe: savedRecipe,
     });
   } catch (err) {
-    next(err);
+    if (err instanceof z.ZodError)
+      return res.status(422).json({
+        message: err.errors,
+      });
+    res.status(500).json({ message: "Server Error" });
   }
 });
 

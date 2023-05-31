@@ -1,32 +1,40 @@
 const express = require("express");
-const { saveUser, findUserbyEmail } = require("../database/users");
+const { saveUser, findUserByEmail } = require("../database/users");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const z = require("zod");
 const auth = require("../middlewares/auth");
-const EmailAlreadyBeenUsed = require("../errors/EmailAlreadyBeingUsed");
+
 const router = express.Router();
 
-const userSchema = z.object({
+const UserSchema = z.object({
   name: z.string().min(3).max(50),
   email: z.string().email().max(70),
   password: z.string().min(6).max(25),
 });
 
-router.post("/register", async (req, res, next) => {
+router.post("/register", async (req, res) => {
   try {
-    const user = userSchema.parse(req.body);
-    const isEmailAlreadyUsed = await findUserbyEmail(user.email);
-    if (isEmailAlreadyUsed) throw new EmailAlreadyBeenUsed();
-    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+    const user = UserSchema.parse(req.body);
+    const isEmailAlreadyBeingUsed = await findUserByEmail(user.email);
+    if (isEmailAlreadyBeingUsed)
+      return res.status(400).json({
+        message: "email already being used",
+      });
+    const hashedPassword = bcrypt.hashSync(user.password, 10);
     user.password = hashedPassword;
-    const savedUser = await saveUser(user);
+    const savedUser = saveUser(user);
     delete savedUser.password;
-    res.status(201).json({
-      user: savedUser,
+    res.json({ user: savedUser });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(422).json({
+        message: error.errors,
+      });
+    }
+    res.status(500).json({
+      message: "server error",
     });
-  } catch (err) {
-    next(err);
   }
 });
 
