@@ -65,7 +65,7 @@ router.delete("/recipes/:id", auth, async (req, res) => {
     });
   }
   await deleteRecipe(id);
-  return res.status(204).json({ message: "Produto deletado" });
+  res.status(200).json({ message: "Produto deletado" });
 });
 
 module.exports = {
