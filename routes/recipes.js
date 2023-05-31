@@ -56,16 +56,16 @@ router.put("/recipes/:id", auth, async (req, res) => {
 router.delete("/recipes/:id", auth, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) {
-    return res.status(400).json({ message: "ID inválido" });
+    return res.status(400).json({ message: "Invalid ID" });
   }
   const recipe = await findRecipeByID(id);
   if (!recipe) {
     return res.status(404).json({
-      message: "Receita não encontrada",
+      message: "Recipe not found",
     });
   }
   await deleteRecipe(id);
-  res.status(200).json({ message: "Produto deletado" });
+  res.status(200).json({ message: "Recipe deleted" });
 });
 
 module.exports = {

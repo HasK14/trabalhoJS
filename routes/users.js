@@ -1,9 +1,11 @@
 const express = require("express");
-const router = express.Router();
+const { saveUser, findUserbyEmail } = require("../database/users");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const z = require("zod");
-const { saveUser, findUserbyEmail } = require("../database/users");
+const auth = require("../middlewares/auth");
+const EmailAlreadyBeenUsed = require("../errors/EmailAlreadyBeingUsed");
+const router = express.Router();
 
 const userSchema = z.object({
   name: z.string().min(3).max(50),
@@ -12,14 +14,20 @@ const userSchema = z.object({
 });
 
 router.post("/register", async (req, res, next) => {
-  const user = userSchema.parse(req.body);
-  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  user.password = hashedPassword;
-  const savedUser = await saveUser(user);
-  delete savedUser.password;
-  res.status(201).json({
-    user: savedUser,
-  });
+  try {
+    const user = userSchema.parse(req.body);
+    const isEmailAlreadyUsed = await findUserbyEmail(user.email);
+    if (isEmailAlreadyUsed) throw new EmailAlreadyBeenUsed();
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+    user.password = hashedPassword;
+    const savedUser = await saveUser(user);
+    delete savedUser.password;
+    res.status(201).json({
+      user: savedUser,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post("/login", async (req, res) => {
@@ -27,10 +35,11 @@ router.post("/login", async (req, res) => {
   const password = req.body.password;
 
   const user = await findUserbyEmail(email);
-  if (!user) return res.status(401).json("Email ou senha inválidas");
+  if (!user) return res.status(401).json("Email or password not valid");
 
   const isSamePassword = bcrypt.compareSync(password, user.password);
-  if (!isSamePassword) return res.status(401).json("Email ou senha inválidos");
+  if (!isSamePassword)
+    return res.status(401).json("Email or password not valid");
 
   const token = jwt.sign(
     {
