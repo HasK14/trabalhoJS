@@ -5,7 +5,11 @@ const {
   getAllRecipes,
   getRecipeById,
   saveRecipe,
+  updateRecipe,
+  deleteRecipe,
+  findRecipeByID,
 } = require("../database/recipes");
+const auth = require("../middlewares/auth");
 
 const recipeSchema = z.object({
   name: z.string(),
@@ -13,27 +17,55 @@ const recipeSchema = z.object({
   preparationTime: z.string(),
 });
 
-router.get("/recipes", async (req, res) => {
+router.get("/recipes", auth, async (req, res) => {
   const recipes = await getAllRecipes();
   res.json({
     recipes,
   });
 });
 
-router.get("/products/:id", async (req, res) => {
+router.get("/recipes/:id", auth, async (req, res) => {
   const id = Number(req.params.id);
   const recipe = await getRecipeById(id);
   res.json({
-    product,
+    recipe,
   });
 });
 
-router.post("/postRecipe", async (req, res) => {
-  const newRecipe = recipeSchema.parse(req.body);
-  const savedRecipe = await saveRecipe(newRecipe);
+router.post("/postRecipe", auth, async (req, res, next) => {
+  try {
+    const newRecipe = recipeSchema.parse(req.body);
+    const savedRecipe = await saveRecipe(newRecipe);
+    res.json({
+      recipe: savedRecipe,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/recipes/:id", auth, async (req, res) => {
+  const id = Number(req.params.id);
+  const recipe = recipeSchema.parse(req.body);
+  const updatedRecipe = await updateRecipe(id, recipe);
   res.json({
-    recipe: savedRecipe,
+    recipe: updatedRecipe,
   });
+});
+
+router.delete("/recipes/:id", auth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "ID inválido" });
+  }
+  const recipe = await findRecipeByID(id);
+  if (!recipe) {
+    return res.status(404).json({
+      message: "Receita não encontrada",
+    });
+  }
+  await deleteRecipe(id);
+  return res.status(204).json({ message: "Produto deletado" });
 });
 
 module.exports = {
