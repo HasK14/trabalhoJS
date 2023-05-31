@@ -6,8 +6,8 @@ const saveUser = (user) => {
   });
 };
 
-const findUserbyEmail = (email) => {
-  return prisma.users.findUnique({
+const findUserByEmail = (email) => {
+  return prisma.user.findUnique({
     where: {
       email,
     },
@@ -16,5 +16,5 @@ const findUserbyEmail = (email) => {
 
 module.exports = {
   saveUser,
-  findUserbyEmail,
+  findUserByEmail,
 };
