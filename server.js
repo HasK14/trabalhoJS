@@ -11,21 +11,21 @@ app.use(express.json());
 
 // app.use(logger);
 
-app.use(healthRoutes.router);
-app.use(userRoutes.router);
-app.use(recipeRoutes.router);
+app.use(healthRoutes);
+app.use(userRoutes);
+app.use(recipeRoutes);
 
-app.use((err, req, res, next) => {
-  if (err instanceof EmailAlreadyBeenUsed) {
-    return res.status(400).json({
-      message: err.message,
-    });
-  }
-  if (err instanceof ZodError)
-    return res.status(422).json({
-      message: err.errors,
-    });
-  res.status(500).json({ message: "Server Error " });
-});
+// app.use((err, req, res, next) => {
+//   if (err instanceof EmailAlreadyBeenUsed) {
+//     return res.status(400).json({
+//       message: err.message,
+//     });
+//   }
+//   if (err instanceof ZodError)
+//     return res.status(422).json({
+//       message: err.errors,
+//     });
+//   res.status(500).json({ message: "Server Error " });
+// });
 
-module.exports = { app };
+module.exports = app;

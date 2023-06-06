@@ -1,11 +1,5 @@
 const prisma = require("./prisma");
 
-const saveUser = (user) => {
-  return prisma.users.create({
-    data: user,
-  });
-};
-
 const findUserByEmail = (email) => {
   return prisma.user.findUnique({
     where: {
@@ -14,7 +8,13 @@ const findUserByEmail = (email) => {
   });
 };
 
+const saveUser = (user) => {
+  return prisma.user.create({
+    data: user,
+  });
+};
+
 module.exports = {
-  saveUser,
   findUserByEmail,
+  saveUser,
 };

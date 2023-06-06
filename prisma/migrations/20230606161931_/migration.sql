@@ -7,13 +7,13 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "Recipes" (
+CREATE TABLE "Recipe" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "preparationTime" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
-    CONSTRAINT "Recipes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT "Recipe_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex

@@ -4,14 +4,15 @@ const z = require("zod");
 const {
   getAllRecipes,
   getRecipeById,
-  saveRecipe,
   updateRecipe,
   deleteRecipe,
   findRecipeByID,
+  saveRecipe,
 } = require("../database/recipes");
 const auth = require("../middlewares/auth");
+const { recipe } = require("../database/prisma");
 
-const recipeSchema = z.object({
+const RecipeSchema = z.object({
   name: z.string(),
   description: z.string().min(10),
   preparationTime: z.string(),
@@ -32,26 +33,31 @@ router.get("/recipes/:id", auth, async (req, res) => {
   });
 });
 
-router.post("/postRecipe", auth, async (req, res) => {
+router.post("/recipe", auth, async (req, res) => {
   try {
-    const newRecipe = recipeSchema.parse(req.body);
-    const userID = req.user.id; // ID do usuário logado
-    const savedRecipe = await saveRecipe(newRecipe); // Salvar a receita
-    res.json({
+    const newRecipe = RecipeSchema.parse(req.body);
+    const userId = req.userId;
+    const savedRecipe = await saveRecipe(newRecipe, userId);
+    delete savedRecipe.user.password;
+    res.status(201).json({
       recipe: savedRecipe,
     });
-  } catch (err) {
-    if (err instanceof z.ZodError)
+  } catch (error) {
+    console.error(error);
+    if (error instanceof z.ZodError) {
       return res.status(422).json({
-        message: err.errors,
+        message: error.errors,
       });
-    res.status(500).json({ message: "Server Error" });
+    }
+    res.status(500).json({
+      message: "server error",
+    });
   }
 });
 
 router.put("/recipes/:id", auth, async (req, res) => {
   const id = Number(req.params.id);
-  const recipe = recipeSchema.parse(req.body);
+  const recipe = RecipeSchema.parse(req.body);
   const updatedRecipe = await updateRecipe(id, recipe);
   res.json({
     recipe: updatedRecipe,
@@ -73,6 +79,4 @@ router.delete("/recipes/:id", auth, async (req, res) => {
   res.status(200).json({ message: "Recipe deleted" });
 });
 
-module.exports = {
-  router,
-};
+module.exports = router;

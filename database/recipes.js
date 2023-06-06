@@ -1,12 +1,20 @@
-const { pid } = require("process");
 const prisma = require("./prisma");
 
-const getAllRecipes = () => {
-  return prisma.recipes.findMany();
+const getAllRecipes = async () => {
+  const recipes = await prisma.recipe.findMany({
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  return recipes;
 };
 
 const getRecipeById = (id) => {
-  return prisma.recipes.findFirst({
+  return prisma.recipe.findFirst({
     where: {
       id: id,
     },
@@ -14,19 +22,27 @@ const getRecipeById = (id) => {
 };
 
 const findRecipeByID = (id) => {
-  return prisma.recipes.findUnique({
+  return prisma.recipe.findUnique({
     where: { id },
   });
 };
 
-const saveRecipe = (recipe) => {
-  return prisma.recipes.create({
-    data: recipe,
+const saveRecipe = async (recipe, userId) => {
+  return prisma.recipe.create({
+    data: {
+      name: recipe.name,
+      description: recipe.description,
+      preparationTime: recipe.preparationTime,
+      userId: userId,
+    },
+    include: {
+      user: true,
+    },
   });
 };
 
 const updateRecipe = (id, recipe) => {
-  return prisma.recipes.update({
+  return prisma.recipe.update({
     where: {
       id: id,
     },
@@ -35,7 +51,7 @@ const updateRecipe = (id, recipe) => {
 };
 
 const deleteRecipe = (id) => {
-  return prisma.recipes.delete({
+  return prisma.recipe.delete({
     where: {
       id,
     },
@@ -45,8 +61,8 @@ const deleteRecipe = (id) => {
 module.exports = {
   getAllRecipes,
   getRecipeById,
-  saveRecipe,
   updateRecipe,
   deleteRecipe,
   findRecipeByID,
+  saveRecipe,
 };
